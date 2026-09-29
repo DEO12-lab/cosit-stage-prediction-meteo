@@ -50,7 +50,7 @@ afficher_entete_logo(CHEMIN_LOGO)
 
 logo_petit = logo_img_html(CHEMIN_LOGO, taille_px=40)
 st.markdown(
-    f"<h1 style='text-align:center;'>{logo_petit} Prédiction météo (cas de Cotonou et ses environs (Bénin))</h1>",
+    f"<h1 style='text-align:center;'>{logo_petit} Prédiction météo (Cotonou )</h1>",
     unsafe_allow_html=True,
 )
 st.write(

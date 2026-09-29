@@ -1,6 +1,6 @@
 """
-app/ui_helpers.py
-
+src/ui_helpers.py
+-------------------
 Style CSS et composants partagés (fond, ombres, navbar, footer, splash).
 
 Vue d'ensemble des fonctions :
@@ -45,17 +45,9 @@ def injecter_style_global():
                garde assez de place pour que le bouton d'ouverture/fermeture
                de la sidebar reste cliquable, sans afficher de bandeau blanc. */
             header[data-testid="stHeader"] {
-                background: transparent !important;
-                height: 2.5rem;
-                min-height: 2.5rem;
-                position: relative !important;
-                z-index: 9999 !important;
-            }
-
-            /* Le bouton d'ouverture/fermeture de la sidebar reste toujours accessible */
-            header[data-testid="stHeader"] button {
-                position: relative;
-                z-index: 10000 !important;
+                background: transparent;
+                height: 2.2rem;
+                min-height: 2.2rem;
             }
             div[data-testid="stDecoration"] { display: none; }
 
@@ -65,15 +57,37 @@ def injecter_style_global():
                 overflow-x: hidden;
             }
 
+            /* Conteneur de référence commun : tous les blocs restent centrés
+               et utilisent le même modèle de calcul des largeurs. */
             .block-container {
                 width: 100%;
-                max-width: 1100px;
-                margin: 0 auto;
-                padding-top: 0.5rem;
-                padding-bottom: 2rem;
-                padding-left: clamp(0.75rem, 3vw, 2rem);
-                padding-right: clamp(0.75rem, 3vw, 2rem);
+                max-width: 1060px;
                 box-sizing: border-box;
+                margin-left: auto;
+                margin-right: auto;
+                padding: 0.5rem 1.5rem 2rem 1.5rem;
+            }
+
+            /* Largeur commune pour la navigation, les cartes, le formulaire
+               de prédiction et le pied de page. */
+            .st-key-navbar_accueil,
+            .barre-titre-noire,
+            .entete-accueil,
+            div[data-testid="stForm"],
+            .footer {
+                width: 100%;
+                max-width: 100%;
+                min-width: 0;
+                box-sizing: border-box;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .st-key-navbar_accueil *,
+            .entete-accueil *,
+            div[data-testid="stForm"] * {
+                box-sizing: border-box;
+                min-width: 0;
             }
 
             /* --- Sidebar --- */
@@ -91,73 +105,55 @@ def injecter_style_global():
                 background: rgba(255, 255, 255, 0.15);
             }
 
-            /* 
-               NAVBAR MÉTÉOHUB — RESPONSIVE
-                */
-
+            /* ===================================================== */
+            /* Navbar noire pleine largeur (page Accueil uniquement) */
+            /* ===================================================== */
             .st-key-navbar_accueil {
                 width: 100%;
                 background: #0a0a0a;
+                border-radius: 12px;
                 box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
-                border-radius: 10px;
-                padding: 0.35rem 0.5rem;
-                margin: 0 auto 1.2rem auto;
+                padding: 0.3rem 0.5rem;
+                margin-bottom: 1.2rem;
+            }
+            /* Empêche les liens de s'empiler verticalement sur mobile :
+               ils restent sur UNE seule ligne, quitte à défiler horizontalement */
+            .st-key-navbar_accueil div[data-testid="stHorizontalBlock"] {
+                display: flex;
+                width: 100%;
+                flex-wrap: nowrap !important;
+                gap: 0.15rem;
+                overflow-x: auto;
                 box-sizing: border-box;
             }
-
-            .st-key-navbar_accueil div[data-testid="stHorizontalBlock"] {
-                width: 100%;
-                max-width: 1100px;
-                margin: 0 auto;
-                display: flex;
-                flex-wrap: nowrap !important;
-                align-items: center;
-                justify-content: center;
-                gap: 0.2rem;
+            .st-key-navbar_accueil div[data-testid="column"] {
+                flex: 1 1 0 !important;
+                min-width: max-content;
             }
-
             .st-key-navbar_accueil div[data-testid="stPageLink"] {
-                flex: 1 1 0;
-                min-width: 0;
                 background: transparent;
                 box-shadow: none;
-                padding: 0.45rem 0.25rem;
+                padding: 0.35rem 0.2rem;
+                white-space: nowrap;
+            }
+            .st-key-navbar_accueil div[data-testid="stPageLink"]:hover {
+                background: rgba(255, 255, 255, 0.10);
                 border-radius: 8px;
-                box-sizing: border-box;
-                text-align: center;
             }
-
-            .st-key-navbar_accueil div[data-testid="stPageLink"] a {
-                width: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                text-decoration: none;
-            }
-
             .st-key-navbar_accueil div[data-testid="stPageLink"] a p,
             .st-key-navbar_accueil div[data-testid="stPageLink"] a span {
                 color: #ffffff !important;
                 font-weight: 600 !important;
-                font-size: 0.9rem !important;
-                white-space: nowrap !important;
+                justify-content: center !important;
             }
 
-            .st-key-navbar_accueil div[data-testid="stPageLink"]:hover {
-                background: rgba(255, 255, 255, 0.12);
-            }
-
-            /*  */
+            /* ===================================================== */
             /* Bande titre noire pleine largeur (autres pages) */
-            /*  */
+            /* ===================================================== */
             .barre-titre-noire {
-                position: relative;
-                left: 50%;
-                right: 50%;
-                margin-left: -50vw;
-                margin-right: -50vw;
-                width: 100vw;
+                width: 100%;
                 background: #0a0a0a;
+                border-radius: 12px;
                 box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
                 padding: 0.5rem 0;
                 margin-bottom: 1.2rem;
@@ -172,28 +168,28 @@ def injecter_style_global():
 
             /* --- En-tête "MétéoHub" centrée (page d'accueil) --- */
             .entete-accueil {
-                width: 100%;
-                max-width: 1000px;
-                margin: 0 auto 1.5rem auto;
                 background: #ffffff;
                 border-radius: 16px;
-                padding: clamp(1rem, 3vw, 1.5rem);
+                padding: 1.4rem 1.5rem;
                 box-shadow: 0 6px 18px rgba(15, 40, 90, 0.15);
+                margin-bottom: 1.2rem;
                 text-align: center;
-                box-sizing: border-box;
             }
 
-            /*  Formulaires en carte avec ombre (box-shadow)  */
+            /* --- Formulaires en carte avec ombre (box-shadow) --- */
             div[data-testid="stForm"] {
-                width: 100%;
-                max-width: 1000px;
-                margin: 0 auto;
                 background: #ffffff;
-                padding: clamp(1rem, 4vw, 2rem);
+                padding: 2rem 2rem 1rem 2rem;
                 border-radius: 16px;
                 box-shadow: 0 8px 24px rgba(15, 40, 90, 0.18);
                 border: 1px solid #eef1f6;
-                box-sizing: border-box;
+            }
+            /* Tout texte à l'intérieur du formulaire reste sombre, même en
+               thème système sombre (titres, aide, texte des options...) */
+            div[data-testid="stForm"] p,
+            div[data-testid="stForm"] span,
+            div[data-testid="stForm"] label {
+                color: #1a1a1a !important;
             }
             div[data-testid="stSlider"],
             div[data-testid="stNumberInput"],
@@ -204,6 +200,59 @@ def injecter_style_global():
                 border-radius: 12px;
                 box-shadow: 0 2px 8px rgba(15, 40, 90, 0.10);
                 margin-bottom: 1rem;
+            }
+
+            /* --- Couleurs forcées, indépendantes du thème système/menu --- */
+            /* Streamlit change automatiquement les couleurs de texte et des
+               champs en mode sombre (téléphone en Dark, ou menu ⋮ > Dark) ;
+               sans ces règles, le texte devient illisible sur nos cartes
+               claires. On fige donc explicitement chaque élément. */
+
+            /* Libellés au-dessus des champs (ex: "Vitesse maximale du vent") */
+            [data-testid="stWidgetLabel"] p,
+            [data-testid="stWidgetLabel"] label,
+            div[data-testid="stSlider"] label,
+            div[data-testid="stNumberInput"] label,
+            div[data-testid="stSelectbox"] label,
+            div[data-testid="stTextInput"] label {
+                color: #1a1a1a !important;
+            }
+
+            /* Champs texte / nombre (la boîte de saisie elle-même) */
+            div[data-baseweb="input"],
+            div[data-baseweb="base-input"] {
+                background-color: #ffffff !important;
+            }
+            div[data-baseweb="input"] input,
+            div[data-baseweb="base-input"] input {
+                color: #1a1a1a !important;
+                background-color: #ffffff !important;
+                -webkit-text-fill-color: #1a1a1a !important;
+            }
+            button[data-testid="stNumberInputStepUp"],
+            button[data-testid="stNumberInputStepDown"] {
+                background-color: #eef1f6 !important;
+                color: #1a1a1a !important;
+            }
+            button[data-testid="stNumberInputStepUp"] svg,
+            button[data-testid="stNumberInputStepDown"] svg {
+                fill: #1a1a1a !important;
+            }
+
+            /* Liste déroulante (Mois) */
+            div[data-baseweb="select"] > div {
+                background-color: #ffffff !important;
+                color: #1a1a1a !important;
+                border-color: #d6d9dc !important;
+            }
+            div[data-baseweb="select"] span {
+                color: #1a1a1a !important;
+            }
+
+            /* Valeur affichée au-dessus des sliders (ex: "0", "50") */
+            div[data-testid="stSlider"] [data-testid="stTickBarMin"],
+            div[data-testid="stSlider"] [data-testid="stTickBarMax"] {
+                color: #555555 !important;
             }
             div[data-testid="stFormSubmitButton"] button {
                 background-color: #1976d2;
@@ -233,7 +282,7 @@ def injecter_style_global():
                 overflow: hidden;
             }
 
-            /*  Footer NON fixe : en flux normal, en bas du contenu  */
+            /* --- Footer NON fixe : en flux normal, en bas du contenu --- */
             .footer {
                 background: #0b3d91;
                 color: #e3f2fd;
@@ -245,115 +294,90 @@ def injecter_style_global():
             }
             .footer a { color: #ffd54f; text-decoration: none; margin: 0 0.4rem; }
 
-            /* 
-               RESPONSIVE — TABLETTES
-                */
-            @media (max-width: 900px) {
-                .block-container {
-                    max-width: 100%;
-                }
-
-                .st-key-navbar_accueil {
-                    border-radius: 8px;
-                    padding: 0.3rem;
-                }
-
-                .st-key-navbar_accueil div[data-testid="stPageLink"] {
-                    padding: 0.4rem 0.15rem;
-                }
-
-                .st-key-navbar_accueil div[data-testid="stPageLink"] a p,
-                .st-key-navbar_accueil div[data-testid="stPageLink"] a span {
-                    font-size: 0.8rem !important;
-                }
-            }
-
-            /* 
-               RESPONSIVE — TÉLÉPHONES
-                */
+            /* --- Responsive (mobile / écrans étroits) --- */
             @media (max-width: 640px) {
                 .block-container {
                     width: 100%;
                     max-width: 100%;
-                    padding-left: 0.65rem;
-                    padding-right: 0.65rem;
+                    padding-left: 0.8rem;
+                    padding-right: 0.8rem;
                 }
-
-                /* Navbar : une seule ligne, défilement horizontal si nécessaire */
-                .st-key-navbar_accueil {
-                    width: 100%;
-                    margin-bottom: 1rem;
-                    border-radius: 8px;
-                    padding: 0.25rem;
-                }
-
-                .st-key-navbar_accueil div[data-testid="stHorizontalBlock"] {
-                    overflow-x: auto;
-                    overflow-y: hidden;
-                    justify-content: flex-start;
-                    gap: 0.15rem;
-                    scrollbar-width: thin;
-                }
-
-                .st-key-navbar_accueil div[data-testid="stPageLink"] {
-                    flex: 0 0 auto;
-                    min-width: 82px;
-                    padding: 0.4rem 0.25rem;
-                }
-
-                .st-key-navbar_accueil div[data-testid="stPageLink"] a p,
-                .st-key-navbar_accueil div[data-testid="stPageLink"] a span {
-                    font-size: 0.75rem !important;
-                }
-
-                /* Carte MétéoHub */
-                .entete-accueil {
-                    width: 100%;
-                    padding: 1rem 0.75rem;
-                    border-radius: 14px;
-                    margin-bottom: 1rem;
-                }
-
-                .entete-accueil h2 {
-                    font-size: 1.35rem !important;
-                }
-
-                .entete-accueil p {
-                    font-size: 0.85rem !important;
-                }
-
-                /* Titre */
-                h1 {
-                    font-size: 1.45rem !important;
-                    line-height: 1.25 !important;
-                }
-
-                /* Formulaire */
-                div[data-testid="stForm"] {
-                    width: 100%;
-                    padding: 1rem 0.8rem;
-                    border-radius: 14px;
-                    box-shadow: 0 5px 16px rgba(15, 40, 90, 0.15);
-                }
-
-                /* Champs */
-                div[data-testid="stSlider"],
-                div[data-testid="stNumberInput"],
-                div[data-testid="stSelectbox"],
-                div[data-testid="stTextInput"] {
-                    padding: 0.7rem 0.75rem 0.5rem 0.75rem;
-                    margin-bottom: 0.75rem;
-                }
-
-                /* Footer */
+                .st-key-navbar_accueil,
+                .barre-titre-noire,
+                .entete-accueil,
+                div[data-testid="stForm"],
                 .footer {
-                    font-size: 0.75rem;
-                    padding: 0.7rem;
+                    width: 100%;
+                    max-width: 100%;
                 }
+                div[data-testid="stForm"] { padding: 1.2rem; }
+                .entete-accueil { padding: 1rem; }
+                .footer { font-size: 0.75rem; padding: 0.7rem; }
+                .barre-titre-noire span { font-size: 1.1rem; }
+            }
 
-                .barre-titre-noire span {
-                    font-size: 1.1rem;
-                }
+            /* ===================================================== */
+            /* VERROUILLAGE FINAL : mode clair forcé sur le formulaire */
+            /* Placé en dernier exprès : à spécificité égale, la règle */
+            /* la plus bas dans la feuille l'emporte sur celles définies */
+            /* plus haut ou réinjectées par Streamlit en mode sombre.   */
+            /* ===================================================== */
+
+            /* 1) Variables CSS officielles de thème Streamlit, figées
+                  pour TOUT l'appli, que le mode soit Light, Dark ou System */
+            :root, [data-theme="dark"], .stApp {
+                --text-color: #1a1a1a !important;
+                --background-color: #ffffff !important;
+                --secondary-background-color: #f0f2f6 !important;
+                --primary-color: #1976d2 !important;
+            }
+
+            /* 2) Le formulaire entier et tout son contenu, en dur */
+            div[data-testid="stForm"],
+            div[data-testid="stForm"] * {
+                background-color: transparent;
+                color: #1a1a1a !important;
+            }
+            div[data-testid="stForm"] {
+                background-color: #ffffff !important;
+            }
+            div[data-testid="stSlider"],
+            div[data-testid="stNumberInput"],
+            div[data-testid="stSelectbox"],
+            div[data-testid="stTextInput"] {
+                background-color: #fbfcfe !important;
+            }
+
+            /* 3) Les boîtes de saisie elles-mêmes (nombre, texte, liste) */
+            div[data-testid="stForm"] input,
+            div[data-testid="stForm"] textarea,
+            div[data-testid="stForm"] select,
+            div[data-testid="stForm"] div[data-baseweb="input"],
+            div[data-testid="stForm"] div[data-baseweb="base-input"],
+            div[data-testid="stForm"] div[data-baseweb="select"] > div {
+                background-color: #ffffff !important;
+                color: #1a1a1a !important;
+                -webkit-text-fill-color: #1a1a1a !important;
+                border-color: #d6d9dc !important;
+            }
+
+            /* 4) Boutons +/- des champs numériques */
+            div[data-testid="stForm"] button[data-testid="stNumberInputStepUp"],
+            div[data-testid="stForm"] button[data-testid="stNumberInputStepDown"] {
+                background-color: #eef1f6 !important;
+                color: #1a1a1a !important;
+            }
+            div[data-testid="stForm"] button[data-testid="stNumberInputStepUp"] svg,
+            div[data-testid="stForm"] button[data-testid="stNumberInputStepDown"] svg {
+                fill: #1a1a1a !important;
+            }
+
+            /* 5) Bouton "Prédire" : on garde le bleu/blanc voulu, pas le
+                  texte sombre imposé par la règle générale ci-dessus */
+            div[data-testid="stFormSubmitButton"] button,
+            div[data-testid="stFormSubmitButton"] button * {
+                color: #ffffff !important;
+                background-color: #1976d2 !important;
             }
         </style>
         """,
@@ -452,15 +476,15 @@ def afficher_barre_navigation():
     with st.container(key="navbar_accueil"):
         col1, col2, col3, col4, col5 = st.columns(5)
         with col1:
-            st.page_link(page_accueil, label="🏠 Accueil")
+            st.page_link(page_accueil, label="Accueil")
         with col2:
-            st.page_link(page_connexion, label="🔐 Connexion")
+            st.page_link(page_connexion, label="Connexion")
         with col3:
-            st.page_link(page_utilisateurs, label="👥 Utilisateurs")
+            st.page_link(page_utilisateurs, label="Utilisateurs")
         with col4:
-            st.page_link(page_historique, label="🕘 Historique")
+            st.page_link(page_historique, label="Historique")
         with col5:
-            st.page_link(page_dashboard, label="📊 Power BI")
+            st.page_link(page_dashboard, label="Power BI")
 
 
 def afficher_barre_titre(nom_page: str):
@@ -486,7 +510,7 @@ def afficher_entete_logo(chemin_logo: str = "assets/logo.png"):
         f"""
         <div class="entete-accueil">
             {logo_html}
-            <h2 style="margin:0.6rem 0 0 0;">MétéoHub</h2>
+            <h2 style="margin:0.6rem 0 0 0;color:#0b3d91;">MétéoHub</h2>
             <p style="margin:0.2rem 0 0 0;color:#555;">
                 Prévisions &amp; suivi météo de la ville de Cotonou
             </p>
@@ -510,27 +534,3 @@ def afficher_footer():
         """,
         unsafe_allow_html=True,
     )
-
-
-
-# Variante de repli (NON utilisée par défaut) pour les bandes noires
-
-# Si la technique 100vw (dans .st-key-navbar_accueil et .barre-titre-noire,
-# plus haut) provoque un décalage horizontal ou une barre de défilement
-# parasite sur certains navigateurs/téléphones, remplace dans ces deux
-# blocs CSS les 4 lignes :
-#
-#     position: relative;
-#     left: 50%;
-#     right: 50%;
-#     margin-left: -50vw;
-#     margin-right: -50vw;
-#     width: 100vw;
-#
-# par une seule ligne :
-#
-#     width: 100%;
-#
-# La bande ne débordera plus jusqu'aux bords de l'écran (elle s'arrêtera
-# à la largeur du contenu, ~1000px max), mais elle reste garantie
-# stable sur tous les navigateurs, sans aucun risque de scroll parasite.
