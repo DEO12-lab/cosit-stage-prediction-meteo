@@ -527,9 +527,10 @@ def afficher_footer():
         """
         <div class="footer">
             © 2026 <strong>Cosit Bénin</strong> —
-            <a href="https://www.cosit.bj" target="_blank">www.cosit.bj</a> |
-            📞 +229 00 00 00 00 |
-            ✉️ contact@cosit.bj
+            <a href="https://cosit-benin.com/" target="_blank">https://cosit-benin.com/</a> 
+            |RCCM RB/PNO/21 B 3066 – IFU : 3202112275670 
+            📞 |07 BP 265 – Tel : (+229) 01 69 00 39 96 / 01 60 59 58 75 
+            ✉️   E-mail : cositbenin2021@gmail.com 
         </div>
         """,
         unsafe_allow_html=True,
