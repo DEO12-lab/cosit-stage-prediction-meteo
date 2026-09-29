@@ -1,4 +1,4 @@
-.streamlit/secrets.toml
+
 
 __pycache__/
 *.py[cod]
@@ -6,3 +6,4 @@ __pycache__/
 data/utilisateurs.db
 
 .env
+.streamlit/secrets.toml
