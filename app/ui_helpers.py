@@ -18,9 +18,11 @@ Vue d'ensemble des fonctions :
                                Historique)
 - afficher_entete_logo()    : bloc "MétéoHub" centré sous la navbar
 - afficher_footer()         : pied de page NON fixe, en flux normal
+- formater_date_heure()     : "2026-09-29 14:32:05" -> "29/09/2026 à 14:32"
 """
 
 import base64
+from datetime import datetime
 from pathlib import Path
 
 import streamlit as st
@@ -379,10 +381,224 @@ def injecter_style_global():
                 color: #ffffff !important;
                 background-color: #1976d2 !important;
             }
+
+            /* ===================================================== */
+            /* AJOUTS : boîtes de suggestion, cartes utilisateurs,   */
+            /* cartes de prédictions, bouton rouge d'autorisation    */
+            /* ===================================================== */
+
+            /* Boîtes de suggestion de la page Connexion (box-shadow) */
+            [class*="st-key-boite_"] {
+                background: #ffffff;
+                border-radius: 16px;
+                padding: 1.1rem 1.3rem;
+                margin-bottom: 1.2rem;
+                border: 1px solid #eef1f6;
+                border-left: 6px solid #1976d2;
+                box-shadow: 0 8px 24px rgba(15, 40, 90, 0.22);
+            }
+            .st-key-boite_demande_admin {
+                background: #fff8e1;
+                border-left-color: #f9a825;
+                box-shadow: 0 6px 18px rgba(249, 168, 37, 0.35);
+            }
+            .st-key-boite_autorisation {
+                border-left-color: #d32f2f;
+            }
+            .boite-titre {
+                font-weight: 700;
+                font-size: 1.05rem;
+                color: #0b3d91;
+                margin-bottom: 0.3rem;
+            }
+            .boite-texte {
+                color: #1a1a1a;
+                font-size: 0.92rem;
+                margin-bottom: 0.7rem;
+            }
+            /* Le titre garde sa couleur même dans le formulaire (qui force
+               le texte en sombre) */
+            div[data-testid="stForm"] .boite-titre { color: #0b3d91 !important; }
+
+            /* Boutons Google / GitHub */
+            .st-key-btn_google button {
+                background-color: #ffffff !important;
+                border: 1px solid #dadce0 !important;
+                border-radius: 10px;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            }
+            .st-key-btn_google button p,
+            .st-key-btn_github_inactif button p { color: #3c4043 !important; font-weight: 600; }
+            .st-key-btn_github_inactif button {
+                background-color: #ffffff !important;
+                border: 1px solid #dadce0 !important;
+                border-radius: 10px;
+            }
+            a.btn-oauth {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-sizing: border-box;
+                width: 100%;
+                min-height: 2.5rem;
+                padding: 0.4rem 1rem;
+                border-radius: 10px;
+                font-weight: 600;
+                text-decoration: none !important;
+            }
+            a.btn-oauth-github {
+                background: #24292f;
+                color: #ffffff !important;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            }
+            a.btn-oauth-github:hover { background: #000000; }
+
+            /* Cartes (utilisateurs et prédictions) */
+            [class*="st-key-carte_utilisateur_"],
+            .carte-prediction {
+                background: #ffffff;
+                border-radius: 14px;
+                padding: 1rem 1.2rem;
+                border: 1px solid #eef1f6;
+                box-shadow: 0 6px 18px rgba(15, 40, 90, 0.20);
+            }
+            [class*="st-key-carte_utilisateur_"] { margin-bottom: 1rem; }
+            .carte-utilisateur-nom {
+                font-weight: 700;
+                font-size: 1.05rem;
+                color: #0b3d91;
+                margin-bottom: 0.3rem;
+            }
+            .carte-utilisateur-ligne,
+            .carte-prediction-ligne {
+                color: #1a1a1a;
+                margin: 0.15rem 0;
+                overflow-wrap: anywhere;
+            }
+            .carte-prediction-ligne strong { color: #0b3d91; }
+
+            /* Grille de cartes de prédictions : s'adapte au mobile */
+            .grille-predictions {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+                gap: 1rem;
+                margin-top: 0.5rem;
+            }
+            .carte-prediction {
+                display: flex;
+                flex-direction: column;
+                border-left: 6px solid #1976d2;
+            }
+            .carte-prediction-date {
+                margin-top: auto;
+                padding-top: 0.5rem;
+                border-top: 1px dashed #d6d9dc;
+                font-size: 0.82rem;
+                color: #555555;
+            }
+            .carte-prediction-ligne:last-of-type { margin-bottom: 0.6rem; }
+
+            /* Pastilles d'état sous les infos d'un utilisateur */
+            .badge {
+                display: inline-block;
+                padding: 0.2rem 0.7rem;
+                border-radius: 999px;
+                font-size: 0.8rem;
+                font-weight: 600;
+                margin: 0.4rem 0.4rem 0.4rem 0;
+            }
+            .badge-admin { background: #e8f5e9; color: #1b5e20; }
+            .badge-attente { background: #fff3e0; color: #e65100; }
+
+            /* Bouton ROUGE « Autoriser à devenir administrateur » */
+            [class*="st-key-autoriser_"] button {
+                background-color: #d32f2f !important;
+                border: none !important;
+                border-radius: 10px;
+                box-shadow: 0 4px 12px rgba(211, 47, 47, 0.4);
+            }
+            [class*="st-key-autoriser_"] button:hover {
+                background-color: #b71c1c !important;
+            }
+            [class*="st-key-autoriser_"] button,
+            [class*="st-key-autoriser_"] button * {
+                color: #ffffff !important;
+                font-weight: 600;
+            }
+            /* ===================================================== */
+            /* RESULTATS DE PREDICTION                               */
+            /* Compatible Light + Dark                               */
+            /* ===================================================== */
+
+            .resultat-prediction {
+            background-color: #ffffff !important;
+            color: #1a1a1a !important;
+            border-radius: 16px;
+            padding: 1.4rem;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid #d6d9dc;
+            box-shadow: 0 6px 18px rgba(15, 40, 90, 0.18);
+            min-height: 150px;
+            box-sizing: border-box;
+            }
+
+            .resultat-prediction * {
+            box-sizing: border-box;
+            }
+
+            .resultat-titre {
+            color: #0b3d91 !important;
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            }
+
+            .resultat-valeur {
+            color: #1a1a1a !important;
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0.5rem 0 1rem 0;
+            }
+
+            .resultat-message {
+            color: #555555 !important;
+            font-size: 0.9rem;
+            margin-bottom: 0.8rem;
+            }
+
+            .resultat-pluie {
+            background-color: #ffebee !important;
+            color: #b71c1c !important;
+            border-left: 5px solid #d32f2f;
+            border-radius: 8px;
+            padding: 0.6rem 0.8rem;
+            font-weight: 600;
+            }
+
+            .resultat-pas-pluie {
+            background-color: #e8f5e9 !important;
+            color: #1b5e20 !important;
+            border-left: 5px solid #2e7d32;
+            border-radius: 8px;
+            padding: 0.6rem 0.8rem;
+            font-weight: 600;
+            }
         </style>
         """,
         unsafe_allow_html=True,
     )
+
+
+def formater_date_heure(valeur) -> str:
+    """\"2026-09-29 14:32:05\" -> \"29/09/2026 à 14:32\". Si le format n'est pas
+    reconnu, retourne le texte d'origine."""
+    try:
+        return datetime.strptime(str(valeur), "%Y-%m-%d %H:%M:%S").strftime(
+            "%d/%m/%Y à %H:%M"
+        )
+    except ValueError:
+        return str(valeur)
 
 
 def _encoder_image_base64(chemin: str):
@@ -527,10 +743,9 @@ def afficher_footer():
         """
         <div class="footer">
             © 2026 <strong>Cosit Bénin</strong> —
-            <a href="https://cosit-benin.com/" target="_blank">https://cosit-benin.com/</a> 
-            |RCCM RB/PNO/21 B 3066 – IFU : 3202112275670 
-            📞 |07 BP 265 – Tel : (+229) 01 69 00 39 96 / 01 60 59 58 75 
-            ✉️   E-mail : cositbenin2021@gmail.com 
+            <a href="https://www.cosit.bj" target="_blank">www.cosit.bj</a> |
+            📞 +229 00 00 00 00 |
+            ✉️ contact@cosit.bj
         </div>
         """,
         unsafe_allow_html=True,

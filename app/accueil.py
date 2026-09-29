@@ -54,7 +54,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 st.write(
-    "<p style='text-align:center;'>Veillez renseigne les conditions atmosphériques "
+    "<p style='text-align:center;'>Veillez renseigner les conditions atmosphériques "
     "ci-dessous pour estimer la température et la probabilité de pluie.</p>",
     unsafe_allow_html=True,
 )
@@ -103,38 +103,122 @@ if valider:
     col1, col2 = st.columns(2)
 
     with col1:
-        st.subheader(" Température estimée")
+
+        st.markdown(
+            """
+            <div class="resultat-prediction">
+                <div class="resultat-titre">🌡️ Température estimée</div>
+            """,
+            unsafe_allow_html=True,
+        )
+
         if modele_temperature is not None:
             prediction_temperature = modele_temperature.predict(caracteristiques)[0]
-            st.metric("Température", f"{prediction_temperature:.1f} °C")
+
+            st.markdown(
+                f"""
+                <div class="resultat-valeur">
+                    {prediction_temperature:.1f} °C
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
             temperature_a_logger = f"{prediction_temperature:.1f} °C"
+
         else:
-            st.warning("Modèle de température pas encore disponible (démo).")
-            st.metric("Température (factice)", "27.5 °C")
+            st.markdown(
+                """
+                <div class="resultat-message">
+                    Modèle de température pas encore disponible (démo).
+                </div>
+                <div class="resultat-valeur">
+                    27.5 °C
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
             temperature_a_logger = "27.5 °C (démo)"
 
+        st.markdown("</div>", unsafe_allow_html=True)
+
+
     with col2:
-        st.subheader(" Probabilité de pluie")
+
+        st.markdown(
+            """
+            <div class="resultat-prediction">
+                <div class="resultat-titre">🌧️ Probabilité de pluie</div>
+            """,
+            unsafe_allow_html=True,
+        )
+
         if modele_pluie is not None:
+
             probabilite_pluie = modele_pluie.predict_proba(caracteristiques)[0][1]
+
             va_pleuvoir = probabilite_pluie >= SEUIL_DECISION_PLUIE
 
-            st.metric("Probabilité de pluie", f"{probabilite_pluie * 100:.0f} %")
+            st.markdown(
+                f"""
+                <div class="resultat-valeur">
+                    {probabilite_pluie * 100:.0f} %
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
             if va_pleuvoir:
-                st.error(" Pluie probable")
+                st.markdown(
+                    """
+                    <div class="resultat-pluie">
+                        🌧️ Pluie probable
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
                 resultat_a_logger = "Pluie probable"
+
             else:
-                st.success(" Pas de pluie attendue")
+                st.markdown(
+                    """
+                    <div class="resultat-pas-pluie">
+                        ☀️ Pas de pluie attendue
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
                 resultat_a_logger = "Pas de pluie attendue"
+
             probabilite_a_logger = f"{probabilite_pluie * 100:.0f} %"
+
         else:
-            st.warning("Modèle de pluie pas encore disponible (démo).")
-            st.metric("Probabilité de pluie (factice)", "40 %")
-            st.success(" Pas de pluie attendue (démo)")
+
+            st.markdown(
+                """
+                <div class="resultat-message">
+                    Modèle de pluie pas encore disponible (démo).
+                </div>
+
+                <div class="resultat-valeur">
+                    40 %
+                </div>
+
+                <div class="resultat-pas-pluie">
+                    ☀️ Pas de pluie attendue (démo)
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
             probabilite_a_logger = "40 % (démo)"
             resultat_a_logger = "Pas de pluie attendue (démo)"
 
-    # Enregistrement dans l'historique des prédictions
+        st.markdown("</div>", unsafe_allow_html=True)
+
+
+    # Enregistrement dans l'historique
     ajouter_prediction(
         nom_utilisateur=nom_utilisateur,
         temperature_predite=temperature_a_logger,
