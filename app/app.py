@@ -1,84 +1,57 @@
 """
-Point d'entrée du site de déploiement.
-TODO : à écrire une fois les deux modèles (.pkl) disponibles et
-la technologie (Streamlit ou Flask) choisie en équipe.
+Application Streamlit — Prédiction météo Cotonou
+Point d'entrée (fichier passé à "streamlit run"). Ce fichier :
+1. Affiche un écran de démarrage (splash screen) avec le logo, une
+   seule fois par session, avant que quoi que ce soit d'autre
+   n'apparaisse — comme sur une app mobile.
+2. Configure la page, injecte le style commun (fond, sidebar, footer).
+3. Déclare les pages disponibles et exécute celle choisie par
+   l'utilisateur.
 """
 
-import streamlit as st        
+import sys
+from pathlib import Path
 
+import streamlit as st
 
-from src.data_loading import charger_donnees
-from src.analysis import (
-statistiques_descriptives,
-temperature_moyenne_mensuelle,
-matrice_correlation,
-test_saison_seche_vs_pluvieuse,
+SRC_DIR = Path(__file__).resolve().parent
+sys.path.append(str(SRC_DIR))
+sys.path.append(str(SRC_DIR.parent))
+
+from database import initialiser_base
+from ui_helpers import (
+    afficher_splash,
+    injecter_style_global,
+    afficher_logo_sidebar,
+    afficher_footer,
 )
-from src.visualization import (
-graphique_temperature_mensuelle,
-graphique_precipitations_par_station,
-heatmap_correlation,
-boxplot_saisonnier,
-)
-from src.model import (
-preparer_donnees_modele,
-entrainer_modele,
-predire_pluie,
-)
+from nav import TOUTES_LES_PAGES
 
-st.set_page_config(page_title="MétéoAnalysis", layout="wide")
+CHEMIN_LOGO = str(SRC_DIR / "assets" / "logo.png")
 
-# 1. Initialisation de la base au premier lancement (ne recrée rien si elle existe déjà)
-#initialiser_base()
-
-# Chargement des données 
-df= charger_donnees
-st.title("MétéoAnalysis -- Tableau de bord climatique du Bénin")
-
-# --- Barre latérale de navigation ---
-page = st.sidebar.radio(
-"Navigation",
-["Vue d'ensemble", "Analyse statistique", "Visualisations", "Modèle IA"],
-)
-
-if page == "Vue d'ensemble":
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Température moyenne", f"{ df['temperature'].mean(): .1f} °C")
-    col2.metric("Précipitations cumulées", f"{ df['precipitation'].sum(): .0f} mm")
-    col3.metric("Stations suivies", df["nom_station"].nunique())
-    st.dataframe(df.tail(20))
-
-elif page == "Analyse statistique":
-    st.subheader("Statistiques descriptives par station")
-    st.dataframe(statistiques_descriptives(df))
-    st.subheader("Test statistique : saison sèche vs saison pluvieuse")
-    resultat = test_saison_seche_vs_pluvieuse(df)
-    st.json(resultat)
-
-elif page == "Visualisations":
-    col1, col2 = st.columns(2)
-    with col1:
-        st.pyplot(graphique_temperature_mensuelle(temperature_moyenne_mensuelle(df)))
-        st.pyplot(heatmap_correlation(matrice_correlation(df)))
-    with col2:
-        st.pyplot(graphique_precipitations_par_station(df))
-        st.pyplot(boxplot_saisonnier(df))
-
-elif page == "Modèle IA":
-   st.subheader("Prédiction : jour pluvieux ou sec ?")
-   X, y = preparer_donnees_modele(df)
-   modele, rapport = entrainer_modele(X, y)
-   st.write(f"Précision du modèle sur les données de test : **{ rapport['accuracy']*100: .1f} %**")
-
-   temperature = st.slider("Température (°C)", 15.0, 40.0, 27.0)
-   humidite = st.slider("Humidité (%)", 20.0, 100.0, 70.0)
-   vent = st.slider("Vent (km/h)", 0.0, 60.0, 12.0)
-if st.button("Prédire"):
-  resultat = predire_pluie(modele, temperature, humidite, vent)
-  st.success(resultat)
+st.set_page_config(page_title="MétéoHub", page_icon=CHEMIN_LOGO, layout="wide")
 
 
+# Splash screen : affiché une seule fois par session, avant tout le reste.
 
 
+if "splash_affichee" not in st.session_state:
+    st.session_state.splash_affichee = False
+
+if not st.session_state.splash_affichee:
+    afficher_splash(chemin_logo=CHEMIN_LOGO, duree_secondes=1.8)
+    st.session_state.splash_affichee = True
+    st.rerun()
 
 
+# Application normale (affichée seulement après le splash)
+
+
+initialiser_base()
+injecter_style_global()
+afficher_logo_sidebar(CHEMIN_LOGO)
+
+page_courante = st.navigation(TOUTES_LES_PAGES)
+page_courante.run()
+
+afficher_footer()
