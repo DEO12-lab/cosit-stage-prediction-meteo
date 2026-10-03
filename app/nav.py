@@ -1,21 +1,17 @@
 """
 app/nav.py
 
-Déclare une seule fois toutes les pages de l'app via st.Page.
+Déclare les pages de l'app via st.Page. Les icônes utilisent la syntaxe
+Material Symbols native de Streamlit (":material/nom:") — ce sont de
+vraies icônes vectorielles, pas des emoji.
 """
 
 import streamlit as st
 
-page_accueil = st.Page("accueil.py", title="Accueil", icon="🏠", default=True)
-page_connexion = st.Page("1_connexion.py", title="Connexion", icon="🔐")
-page_utilisateurs = st.Page("2_utilisateurs.py", title="Utilisateurs", icon="👥")
-page_dashboard = st.Page("3_dashboard.py", title="Power BI", icon="📊")
-page_historique = st.Page("4_historique.py", title="Historique", icon="🕘")
+page_accueil = st.Page("accueil.py", title="Accueil", icon=":material/home:", default=True)
+page_historique = st.Page(
+    "4_historique.py", title="Historique des prédictions", icon=":material/history:"
+)
+page_compte = st.Page("2_compte.py", title="Compte", icon=":material/person:")
 
-TOUTES_LES_PAGES = [
-    page_accueil,
-    page_connexion,
-    page_utilisateurs,
-    page_historique,
-    page_dashboard,
-]
+TOUTES_LES_PAGES = [page_accueil, page_historique, page_compte]

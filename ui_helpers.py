@@ -1,5 +1,5 @@
 """
-app/ui_helpers.py
+src/ui_helpers.py
 -------------------
 Style CSS et composants partagés.
 

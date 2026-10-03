@@ -1,8 +1,11 @@
 """
-src/accueil.py
-
-Contenu de la page "Accueil" : navbar, en-tête et formulaire de
-prédiction météo. Exécuté par st.navigation (voir nav.py et app_1.py).
+app/accueil.py
+-----------------
+Page d'accueil, en 3 cartes (box-shadow) dans l'ordre :
+1. Logo + nom de l'app
+2. Connexion / inscription (obligatoire pour débloquer la carte suivante)
+3. Formulaire de prédiction météo — puis les résultats, chacun dans une
+   carte à deux parties (bandeau vert = titre, partie blanche = valeur).
 """
 
 import os
@@ -19,7 +22,13 @@ sys.path.append(str(SRC_DIR.parent))
 
 from src.config import SEUIL_DECISION_PLUIE
 from database import ajouter_prediction
-from ui_helpers import afficher_barre_navigation, afficher_entete_logo, logo_img_html
+from ui_helpers import (
+    afficher_barre_navigation,
+    afficher_entete_logo,
+    afficher_resultat,
+    logo_img_html,
+)
+from auth import connecter, deconnecter, inscrire, utilisateur_connecte
 
 CHEMIN_MODELE_TEMPERATURE = str(SRC_DIR.parent / "models" / "model_temperature.pkl")
 CHEMIN_MODELE_PLUIE = str(SRC_DIR.parent / "models" / "model_pluie.pkl")
@@ -28,7 +37,6 @@ CHEMIN_LOGO = str(SRC_DIR / "assets" / "logo.png")
 
 @st.cache_resource
 def charger_modele(chemin):
-    """Charge un modèle une seule fois, mis en cache entre les interactions."""
     if os.path.exists(chemin) and os.path.getsize(chemin) > 0:
         return joblib.load(chemin)
     return None
@@ -37,24 +45,103 @@ def charger_modele(chemin):
 modele_temperature = charger_modele(CHEMIN_MODELE_TEMPERATURE)
 modele_pluie = charger_modele(CHEMIN_MODELE_PLUIE)
 
-
-# Navbar noire pleine largeur + en-tête centrée
-
-
+# --- Carte navigation + Carte 1 (logo + nom) ---
 afficher_barre_navigation()
 afficher_entete_logo(CHEMIN_LOGO)
 
+utilisateur = utilisateur_connecte()
 
-# Formulaire de prédiction
+
+# Carte 2 : connexion / inscription
 
 
-logo_petit = logo_img_html(CHEMIN_LOGO, taille_px=40)
+if utilisateur is None:
+    with st.container(key="boite_connexion"):
+        st.markdown(
+            '<div class="boite-titre"><i class="fa-solid fa-lock"></i>'
+            "Connecte-toi pour accéder aux prédictions</div>"
+            '<div class="boite-texte">Un compte est nécessaire pour utiliser le '
+            "formulaire de prédiction ci-dessous.</div>",
+            unsafe_allow_html=True,
+        )
+
+        onglet_connexion, onglet_inscription = st.tabs(["Se connecter", "Créer un compte"])
+
+        with onglet_connexion:
+            with st.form("formulaire_connexion"):
+                email_c = st.text_input("Adresse e-mail")
+                mdp_c = st.text_input("Mot de passe", type="password")
+                valider_connexion = st.form_submit_button("Se connecter", type="primary")
+
+            if valider_connexion:
+                ok, message, utilisateur_trouve = connecter(email_c, mdp_c)
+                if ok:
+                    from auth import ouvrir_session
+                    ouvrir_session(utilisateur_trouve)
+                    st.success(message)
+                    st.rerun()
+                else:
+                    st.error(message)
+
+        with onglet_inscription:
+            with st.form("formulaire_inscription"):
+                email_i = st.text_input("Adresse e-mail *")
+                nom_i = st.text_input("Nom *")
+                prenom_i = st.text_input("Prénom *")
+                telephone_i = st.text_input("Numéro de téléphone")
+                mdp_i = st.text_input("Mot de passe *", type="password")
+                mdp_i_confirme = st.text_input("Confirmer le mot de passe *", type="password")
+                valider_inscription = st.form_submit_button("Créer mon compte", type="primary")
+
+            if valider_inscription:
+                if mdp_i != mdp_i_confirme:
+                    st.error("Les deux mots de passe ne correspondent pas.")
+                else:
+                    ok, message = inscrire(email_i, nom_i, prenom_i, telephone_i, mdp_i)
+                    if ok:
+                        ok2, _, utilisateur_cree = connecter(email_i, mdp_i)
+                        if ok2:
+                            from auth import ouvrir_session
+                            ouvrir_session(utilisateur_cree)
+                        st.success(message)
+                        st.rerun()
+                    else:
+                        st.error(message)
+
+else:
+    with st.container(key="boite_connecte"):
+        col_texte, col_bouton = st.columns([4, 1])
+        with col_texte:
+            st.markdown(
+                f'<div class="boite-titre"><i class="fa-solid fa-circle-check" '
+                f'style="color:#2e7d32;"></i>Connecté en tant que '
+                f"{utilisateur['prenom']} {utilisateur['nom']}</div>",
+                unsafe_allow_html=True,
+            )
+        with col_bouton:
+            if st.button("Déconnexion", key="btn_deconnexion", use_container_width=True):
+                deconnecter()
+                st.rerun()
+
+# 
+# Carte 3 : formulaire de prédiction (verrouillé tant que non connecté)
+# 
+
+logo_petit = logo_img_html(CHEMIN_LOGO, taille_px=36)
 st.markdown(
-    f"<h1 style='text-align:center;'>{logo_petit} Prédiction météo (Cotonou )</h1>",
+    f"<h1 style='text-align:center;font-size:1.6rem;'>{logo_petit} Prédiction météo (Cotonou)</h1>",
     unsafe_allow_html=True,
 )
+
+if utilisateur is None:
+    st.info(
+        "Le formulaire de prédiction est accessible après connexion — "
+        "utilise la carte ci-dessus pour te connecter ou créer un compte."
+    )
+    st.stop()
+
 st.write(
-    "<p style='text-align:center;'>Veillez renseigner les conditions atmosphériques "
+    "<p style='text-align:center;'>Renseigne les conditions atmosphériques "
     "ci-dessous pour estimer la température et la probabilité de pluie.</p>",
     unsafe_allow_html=True,
 )
@@ -96,131 +183,54 @@ if valider:
         "sunshine_duration_heures": duree_ensoleillement,
     }])
 
-    # Nom associé à cette prédiction : celui de l'utilisateur connecté
-    # (mémorisé lors de la Connexion), sinon "Invité".
-    nom_utilisateur = st.session_state.get("utilisateur_connecte", "Invité")
+    nom_complet = f"{utilisateur['prenom']} {utilisateur['nom']}"
 
+    st.markdown('<div class="grille-resultats">', unsafe_allow_html=True)
     col1, col2 = st.columns(2)
 
     with col1:
-
-        st.markdown(
-            """
-            <div class="resultat-prediction">
-                <div class="resultat-titre">🌡️ Température estimée</div>
-            """,
-            unsafe_allow_html=True,
-        )
-
         if modele_temperature is not None:
             prediction_temperature = modele_temperature.predict(caracteristiques)[0]
-
-            st.markdown(
-                f"""
-                <div class="resultat-valeur">
-                    {prediction_temperature:.1f} °C
-                </div>
-                """,
-                unsafe_allow_html=True,
+            afficher_resultat(
+                "fa-solid fa-temperature-half", "Température estimée",
+                f"{prediction_temperature:.1f} °C",
             )
-
             temperature_a_logger = f"{prediction_temperature:.1f} °C"
-
         else:
-            st.markdown(
-                """
-                <div class="resultat-message">
-                    Modèle de température pas encore disponible (démo).
-                </div>
-                <div class="resultat-valeur">
-                    27.5 °C
-                </div>
-                """,
-                unsafe_allow_html=True,
+            afficher_resultat(
+                "fa-solid fa-temperature-half", "Température estimée", "27.5 °C",
+                message="Modèle pas encore disponible (démo).",
             )
-
             temperature_a_logger = "27.5 °C (démo)"
 
-        st.markdown("</div>", unsafe_allow_html=True)
-
-
     with col2:
-
-        st.markdown(
-            """
-            <div class="resultat-prediction">
-                <div class="resultat-titre">🌧️ Probabilité de pluie</div>
-            """,
-            unsafe_allow_html=True,
-        )
-
         if modele_pluie is not None:
-
             probabilite_pluie = modele_pluie.predict_proba(caracteristiques)[0][1]
-
             va_pleuvoir = probabilite_pluie >= SEUIL_DECISION_PLUIE
-
-            st.markdown(
-                f"""
-                <div class="resultat-valeur">
-                    {probabilite_pluie * 100:.0f} %
-                </div>
-                """,
-                unsafe_allow_html=True,
+            alerte = (
+                {"texte": "Pluie probable", "type": "pluie"} if va_pleuvoir
+                else {"texte": "Pas de pluie attendue", "type": "sec"}
             )
-
-            if va_pleuvoir:
-                st.markdown(
-                    """
-                    <div class="resultat-pluie">
-                        🌧️ Pluie probable
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-                resultat_a_logger = "Pluie probable"
-
-            else:
-                st.markdown(
-                    """
-                    <div class="resultat-pas-pluie">
-                        ☀️ Pas de pluie attendue
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-                resultat_a_logger = "Pas de pluie attendue"
-
+            afficher_resultat(
+                "fa-solid fa-cloud-rain", "Probabilité de pluie",
+                f"{probabilite_pluie * 100:.0f} %", alerte=alerte,
+            )
+            resultat_a_logger = alerte["texte"]
             probabilite_a_logger = f"{probabilite_pluie * 100:.0f} %"
-
         else:
-
-            st.markdown(
-                """
-                <div class="resultat-message">
-                    Modèle de pluie pas encore disponible (démo).
-                </div>
-
-                <div class="resultat-valeur">
-                    40 %
-                </div>
-
-                <div class="resultat-pas-pluie">
-                    ☀️ Pas de pluie attendue (démo)
-                </div>
-                """,
-                unsafe_allow_html=True,
+            afficher_resultat(
+                "fa-solid fa-cloud-rain", "Probabilité de pluie", "40 %",
+                message="Modèle pas encore disponible (démo).",
+                alerte={"texte": "Pas de pluie attendue (démo)", "type": "sec"},
             )
-
             probabilite_a_logger = "40 % (démo)"
             resultat_a_logger = "Pas de pluie attendue (démo)"
 
-        st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-
-    # Enregistrement dans l'historique
     ajouter_prediction(
-        nom_utilisateur=nom_utilisateur,
+        nom_utilisateur=nom_complet,
+        email_utilisateur=utilisateur["email"],
         temperature_predite=temperature_a_logger,
         probabilite_pluie=probabilite_a_logger,
         resultat=resultat_a_logger,
